@@ -1,106 +1,76 @@
 import { useState, useMemo, useCallback } from 'react';
-import { format, subMonths } from 'date-fns';
+import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isWeekend, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { LogIn, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LogIn, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Plus, Clock, Utensils } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
-import { Calendar } from '@/components/dashboard/Calendar';
-import { DayDetail } from '@/components/dashboard/DayDetail';
-import { MultiSelectToolbar } from '@/components/dashboard/MultiSelectToolbar';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { OnboardingScreen } from '@/components/onboarding/OnboardingScreen';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkEntries } from '@/hooks/useWorkEntries';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { useDayMarkers } from '@/hooks/useDayMarkers';
-import { useWorkEntryCustomRates } from '@/hooks/useWorkEntryCustomRates';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { calculateMonthlySummary, formatCurrency } from '@/lib/calculations';
-import { MarkerType } from '@/types/dayMarker';
+import { calculateMonthlySummary, calculateDayValue, formatCurrency } from '@/lib/calculations';
+import { cn } from '@/lib/utils';
+
+const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
 const Index = () => {
+  const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { entries, isLoading: entriesLoading } = useWorkEntries();
   const { settings } = useUserSettings();
-  const { markers, addMarkers, removeMarkers } = useDayMarkers();
   const { showOnboarding, completeOnboarding } = useOnboarding();
 
-  const entryIds = useMemo(() => entries.map((e) => e.id), [entries]);
-  const { getEntryCustomRatesValue } = useWorkEntryCustomRates(entryIds);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const monthStr = format(currentMonth, 'yyyy-MM');
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'yyyy-MM'));
-
-  // Multi-select state
-  const [multiSelectMode, setMultiSelectMode] = useState(false);
-  const [selectedDates, setSelectedDates] = useState<string[]>([]);
-
-  // Current month summary
+  // Summary
   const summary = useMemo(() => {
-    const monthEntries = entries.filter((e) => e.date.startsWith(currentMonth));
-    const baseSummary = calculateMonthlySummary(entries, currentMonth, settings);
-    let customRatesTotal = 0;
-    monthEntries.forEach((entry) => {
-      customRatesTotal += getEntryCustomRatesValue(entry.id);
-    });
-    baseSummary.grossEarnings += customRatesTotal;
-    const totalDeductionRate = settings.irpf + settings.socialSecurity + settings.mei + settings.unemployment;
-    baseSummary.deductions = baseSummary.grossEarnings * (totalDeductionRate / 100);
-    baseSummary.netEstimate = baseSummary.grossEarnings - baseSummary.deductions;
-    return baseSummary;
-  }, [entries, currentMonth, settings, getEntryCustomRatesValue]);
+    return calculateMonthlySummary(entries, monthStr, settings);
+  }, [entries, monthStr, settings]);
 
-  // Previous month for comparison
+  // Previous month comparison
   const prevSummary = useMemo(() => {
-    const [year, month] = currentMonth.split('-').map(Number);
-    const prevDate = subMonths(new Date(year, month - 1), 1);
-    const prevMonth = format(prevDate, 'yyyy-MM');
-    return calculateMonthlySummary(entries, prevMonth, settings);
+    const prev = format(subMonths(currentMonth, 1), 'yyyy-MM');
+    return calculateMonthlySummary(entries, prev, settings);
   }, [entries, currentMonth, settings]);
 
   const netDiff = summary.netEstimate - prevSummary.netEstimate;
-  const netTrend = netDiff > 10 ? 'up' : netDiff < -10 ? 'down' : 'neutral';
 
-  const selectedDateEntries = useMemo(() => {
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    return entries.filter((e) => e.date === dateStr);
-  }, [entries, selectedDate]);
+  // Calendar days
+  const calendarDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
+    return eachDayOfInterval({ start, end });
+  }, [currentMonth]);
 
-  const handleMonthChange = (date: Date) => {
-    setCurrentMonth(format(date, 'yyyy-MM'));
+  // Entries by date
+  const entriesByDate = useMemo(() => {
+    const map = new Map<string, number>();
+    entries.forEach(entry => {
+      const key = entry.date;
+      const prev = map.get(key) || 0;
+      map.set(key, prev + calculateDayValue(entry, settings));
+    });
+    return map;
+  }, [entries, settings]);
+
+  const handleDayClick = (day: Date) => {
+    if (!isSameMonth(day, currentMonth)) return;
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const dayEntries = entries.filter(e => e.date === dateStr);
+    
+    try { localStorage.setItem('volantia-selected-date', dateStr); } catch {}
+
+    if (dayEntries.length > 0) {
+      navigate(`/new-entry?id=${dayEntries[0].id}&date=${dateStr}`);
+    } else {
+      navigate(`/new-entry?date=${dateStr}`);
+    }
   };
-
-  const handleToggleMultiSelect = useCallback(() => {
-    setMultiSelectMode((prev) => !prev);
-    setSelectedDates([]);
-  }, []);
-
-  const handleToggleDateSelection = useCallback((date: string) => {
-    setSelectedDates((prev) =>
-      prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
-    );
-  }, []);
-
-  const handleApplyMarker = useCallback(async (type: MarkerType) => {
-    if (selectedDates.length === 0) return;
-    await addMarkers(selectedDates, type);
-    setSelectedDates([]);
-    setMultiSelectMode(false);
-  }, [selectedDates, addMarkers]);
-
-  const handleClearMarkers = useCallback(async () => {
-    if (selectedDates.length === 0) return;
-    await removeMarkers(selectedDates);
-    setSelectedDates([]);
-    setMultiSelectMode(false);
-  }, [selectedDates, removeMarkers]);
-
-  const handleCancelMultiSelect = useCallback(() => {
-    setMultiSelectMode(false);
-    setSelectedDates([]);
-  }, []);
 
   if (authLoading || entriesLoading) {
     return (
@@ -116,107 +86,170 @@ const Index = () => {
     return <OnboardingScreen onComplete={completeOnboarding} />;
   }
 
+  const today = new Date();
+
   return (
     <AppLayout title="Volantia">
       <PageTransition>
-        <div className="space-y-4">
+        <div className="space-y-5">
           {/* Auth Banner */}
           {!user && (
-            <GlassCard className="border-primary/20 bg-primary/5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Modo Invitado</p>
-                  <p className="text-sm text-muted-foreground">
-                    Regístrate para sincronizar tus datos
-                  </p>
-                </div>
-                <Link to="/auth">
-                  <Button className="rounded-xl" size="sm">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Acceder
-                  </Button>
-                </Link>
-              </div>
-            </GlassCard>
-          )}
-
-          {/* HERO CARD — The main story */}
-          <GlassCard className="relative overflow-hidden border-primary/10 bg-gradient-to-br from-primary/5 via-background to-amber-500/5">
-            <div className="relative z-10">
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                {format(new Date(currentMonth + '-01'), 'MMMM yyyy', { locale: es })}
-              </p>
-
-              {/* Net estimate - THE number */}
-              <div className="mt-2 flex items-end gap-3">
-                <p className="text-4xl font-extrabold tracking-tight text-foreground">
-                  {summary.netEstimate.toFixed(0)}
-                  <span className="text-xl font-semibold text-muted-foreground ml-1">€</span>
-                </p>
-                {prevSummary.netEstimate > 0 && (
-                  <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold mb-1 ${
-                    netTrend === 'up' ? 'bg-emerald-500/10 text-emerald-500' :
-                    netTrend === 'down' ? 'bg-red-500/10 text-red-500' :
-                    'bg-muted text-muted-foreground'
-                  }`}>
-                    {netTrend === 'up' && <TrendingUp className="h-3 w-3" />}
-                    {netTrend === 'down' && <TrendingDown className="h-3 w-3" />}
-                    {netTrend === 'neutral' && <Minus className="h-3 w-3" />}
-                    {netDiff > 0 ? '+' : ''}{netDiff.toFixed(0)}€
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Neto estimado</p>
-
-              {/* Quick stats row */}
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <div className="rounded-xl bg-background/50 p-2.5 text-center">
-                  <p className="text-lg font-bold text-foreground">{summary.totalWorkDays}</p>
-                  <p className="text-[10px] text-muted-foreground">Días</p>
-                </div>
-                <div className="rounded-xl bg-background/50 p-2.5 text-center">
-                  <p className="text-lg font-bold text-foreground">
-                    {summary.totalFullDietsNational + summary.totalFullDietsInternational + summary.totalHalfDietsNational + summary.totalHalfDietsInternational}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">Dietas</p>
-                </div>
-                <div className="rounded-xl bg-background/50 p-2.5 text-center">
-                  <p className="text-lg font-bold text-foreground">{summary.totalKilometers}</p>
-                  <p className="text-[10px] text-muted-foreground">Km</p>
-                </div>
-              </div>
+            <div className="flex items-center justify-between rounded-2xl bg-primary/5 border border-primary/10 px-4 py-3">
+              <p className="text-sm text-muted-foreground">Modo invitado</p>
+              <Link to="/auth">
+                <Button size="sm" className="rounded-xl h-8 text-xs">
+                  <LogIn className="mr-1.5 h-3.5 w-3.5" />
+                  Acceder
+                </Button>
+              </Link>
             </div>
-          </GlassCard>
-
-          {/* Calendar */}
-          <Calendar
-            entries={entries}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            onMonthChange={handleMonthChange}
-            settings={settings}
-            markers={markers}
-            multiSelectMode={multiSelectMode}
-            selectedDates={selectedDates}
-            onToggleMultiSelect={handleToggleMultiSelect}
-            onToggleDateSelection={handleToggleDateSelection}
-            getEntryCustomRatesValue={getEntryCustomRatesValue}
-          />
-
-          {/* Multi-select toolbar */}
-          {multiSelectMode && (
-            <MultiSelectToolbar
-              selectedDates={selectedDates}
-              onApplyMarker={handleApplyMarker}
-              onClearMarkers={handleClearMarkers}
-              onCancel={handleCancelMultiSelect}
-            />
           )}
 
-          {/* Day Detail */}
-          {!multiSelectMode && (
-            <DayDetail date={selectedDate} entries={selectedDateEntries} />
-          )}
+          {/* ═══ HERO: The only number that matters ═══ */}
+          <div className="pt-2 pb-1">
+            <p className="text-sm text-muted-foreground font-medium">
+              {format(currentMonth, 'MMMM yyyy', { locale: es })}
+            </p>
+            <div className="flex items-end gap-3 mt-1">
+              <span className="text-5xl font-extrabold tracking-tight tabular-nums">
+                {summary.netEstimate.toFixed(0)}
+                <span className="text-2xl font-semibold text-muted-foreground ml-0.5">€</span>
+              </span>
+              {prevSummary.netEstimate > 0 && (
+                <span className={cn(
+                  'text-xs font-semibold px-2 py-0.5 rounded-full mb-2 flex items-center gap-0.5',
+                  netDiff > 10 ? 'bg-emerald-500/10 text-emerald-500' :
+                  netDiff < -10 ? 'bg-red-500/10 text-red-500' :
+                  'bg-muted text-muted-foreground'
+                )}>
+                  {netDiff > 10 && <TrendingUp className="h-3 w-3" />}
+                  {netDiff < -10 && <TrendingDown className="h-3 w-3" />}
+                  {Math.abs(netDiff) <= 10 && <Minus className="h-3 w-3" />}
+                  {netDiff > 0 ? '+' : ''}{netDiff.toFixed(0)}€
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Neto estimado</p>
+          </div>
+
+          {/* ═══ QUICK STATS ═══ */}
+          <div className="grid grid-cols-4 gap-2">
+            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+              <p className="text-xl font-bold">{summary.totalWorkDays}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Días</p>
+            </div>
+            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+              <p className="text-xl font-bold">{Math.round(summary.totalHours)}h</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Horas</p>
+            </div>
+            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+              <p className="text-xl font-bold">{summary.totalFullDietsNational + summary.totalFullDietsInternational + summary.totalHalfDietsNational + summary.totalHalfDietsInternational}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Dietas</p>
+            </div>
+            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+              <p className="text-xl font-bold">{summary.totalKilometers}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Km</p>
+            </div>
+          </div>
+
+          {/* ═══ COMPACT CALENDAR ═══ */}
+          <div className="bg-card/40 rounded-2xl p-4 border border-border/30">
+            {/* Month nav */}
+            <div className="flex items-center justify-between mb-3">
+              <button onClick={() => setCurrentMonth(prev => subMonths(prev, 1))} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
+                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </button>
+              <span className="text-sm font-semibold capitalize">
+                {format(currentMonth, 'MMMM yyyy', { locale: es })}
+              </span>
+              <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Weekday headers */}
+            <div className="grid grid-cols-7 gap-1 mb-1">
+              {WEEKDAYS.map((d, i) => (
+                <div key={d} className={cn(
+                  'text-center text-[10px] font-medium py-1',
+                  i >= 5 ? 'text-primary/60' : 'text-muted-foreground'
+                )}>{d}</div>
+              ))}
+            </div>
+
+            {/* Days */}
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map(day => {
+                const inMonth = isSameMonth(day, currentMonth);
+                const isToday = isSameDay(day, today);
+                const dateStr = format(day, 'yyyy-MM-dd');
+                const dayValue = entriesByDate.get(dateStr) || 0;
+                const hasEntry = dayValue > 0;
+
+                return (
+                  <button
+                    key={day.toISOString()}
+                    onClick={() => handleDayClick(day)}
+                    disabled={!inMonth}
+                    className={cn(
+                      'relative flex flex-col items-center justify-center rounded-lg py-2 min-h-[44px] transition-all',
+                      !inMonth && 'opacity-20',
+                      inMonth && 'active:scale-90',
+                      isToday && 'ring-2 ring-primary ring-offset-1 ring-offset-background',
+                      hasEntry && inMonth && 'bg-primary/10',
+                    )}
+                  >
+                    <span className={cn(
+                      'text-xs font-medium',
+                      isToday && 'text-primary font-bold',
+                      isWeekend(day) && !isToday && 'text-muted-foreground',
+                    )}>
+                      {format(day, 'd')}
+                    </span>
+                    {hasEntry && inMonth && (
+                      <span className="text-[9px] font-semibold text-primary mt-0.5">
+                        {dayValue.toFixed(0)}€
+                      </span>
+                    )}
+                    {!hasEntry && inMonth && (
+                      <span className="w-1 h-1 rounded-full bg-border mt-1" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ═══ TODAY QUICK ACTION ═══ */}
+          <button
+            onClick={() => {
+              const todayStr = format(today, 'yyyy-MM-dd');
+              const todayEntries = entries.filter(e => e.date === todayStr);
+              if (todayEntries.length > 0) {
+                navigate(`/new-entry?id=${todayEntries[0].id}&date=${todayStr}`);
+              } else {
+                navigate(`/new-entry?date=${todayStr}`);
+              }
+            }}
+            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 transition-all active:scale-[0.98] hover:bg-primary/10"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+              <Plus className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-sm">
+                {entries.some(e => e.date === format(today, 'yyyy-MM-dd'))
+                  ? 'Editar jornada de hoy'
+                  : 'Registrar jornada de hoy'
+                }
+              </p>
+              <p className="text-xs text-muted-foreground capitalize">
+                {format(today, "EEEE d 'de' MMMM", { locale: es })}
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </button>
+
         </div>
       </PageTransition>
     </AppLayout>

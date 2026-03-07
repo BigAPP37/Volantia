@@ -509,37 +509,33 @@ export default function NewEntry() {
           )}
         </GlassCard>
 
-        {/* Time */}
+        {/* Time — BIG touch targets */}
         <GlassCard>
-          <h3 className="mb-3 flex items-center gap-2 font-semibold text-sm">
-            <Clock className="h-4 w-4 text-primary" />
-            Horario
-          </h3>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-1">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
               <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Entrada</Label>
               <Input
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => handleChange('startTime', e.target.value)}
-                className="h-10 rounded-lg text-center text-sm px-1"
+                className="h-14 rounded-xl text-center text-xl font-bold px-2"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Salida</Label>
               <Input
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => handleChange('endTime', e.target.value)}
-                className="h-10 rounded-lg text-center text-sm px-1"
+                className="h-14 rounded-xl text-center text-xl font-bold px-2"
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Jornada</Label>
-              <div className="h-10 flex items-center justify-center rounded-lg bg-primary/10 text-base font-bold text-primary">
-                {calculateWorkHours(formData.startTime || '06:00', formData.endTime || '14:00', 0).toFixed(1)}h
-              </div>
-            </div>
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <span className="text-xs text-muted-foreground">Jornada:</span>
+            <span className="text-lg font-bold text-primary">
+              {calculateWorkHours(formData.startTime || '06:00', formData.endTime || '14:00', 0).toFixed(1)}h
+            </span>
           </div>
         </GlassCard>
 
@@ -599,39 +595,33 @@ export default function NewEntry() {
         <div className="grid grid-cols-2 gap-2">
           {settings.showDiets && (
             <>
-              <div className="flex items-center gap-2 bg-muted/20 rounded-lg px-2 py-1.5">
-                <span className="text-xs text-muted-foreground flex-1">Dietas NAC</span>
-                <Input
-                  type="number"
-                  min="0"
-                  value={formData.fullDietsNational || ''}
-                  onChange={(e) => handleChange('fullDietsNational', e.target.value === '' ? 0 : parseInt(e.target.value))}
-                  className="w-12 h-7 rounded text-center text-xs font-medium"
-                />
+              <div className="flex items-center justify-between bg-muted/20 rounded-xl px-3 py-2.5 min-h-[48px]">
+                <span className="text-xs text-muted-foreground">Dietas NAC</span>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => handleChange('fullDietsNational', Math.max(0, (formData.fullDietsNational || 0) - 1))} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-lg font-bold active:scale-90 transition-transform">−</button>
+                  <span className="w-6 text-center font-bold text-sm">{formData.fullDietsNational || 0}</span>
+                  <button type="button" onClick={() => handleChange('fullDietsNational', (formData.fullDietsNational || 0) + 1)} className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-lg font-bold active:scale-90 transition-transform">+</button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-2 py-1.5 border border-primary/20">
-                <span className="text-xs text-primary flex-1">Dietas INT</span>
-                <Input
-                  type="number"
-                  min="0"
-                  value={formData.fullDietsInternational || ''}
-                  onChange={(e) => handleChange('fullDietsInternational', e.target.value === '' ? 0 : parseInt(e.target.value))}
-                  className="w-12 h-7 rounded text-center text-xs font-medium border-primary/30"
-                />
+              <div className="flex items-center justify-between bg-primary/5 border border-primary/10 rounded-xl px-3 py-2.5 min-h-[48px]">
+                <span className="text-xs text-primary">Dietas INT</span>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => handleChange('fullDietsInternational', Math.max(0, (formData.fullDietsInternational || 0) - 1))} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-lg font-bold active:scale-90 transition-transform">−</button>
+                  <span className="w-6 text-center font-bold text-sm">{formData.fullDietsInternational || 0}</span>
+                  <button type="button" onClick={() => handleChange('fullDietsInternational', (formData.fullDietsInternational || 0) + 1)} className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-lg font-bold active:scale-90 transition-transform">+</button>
+                </div>
               </div>
             </>
           )}
 
           {settings.showOvernights && (
-            <div className="flex items-center gap-2 bg-muted/20 rounded-lg px-2 py-1.5">
-              <span className="text-xs text-muted-foreground flex-1">Pernoctas</span>
-              <Input
-                type="number"
-                min="0"
-                value={formData.overnights || ''}
-                onChange={(e) => handleChange('overnights', e.target.value === '' ? 0 : parseInt(e.target.value))}
-                className="w-12 h-7 rounded text-center text-xs font-medium"
-              />
+            <div className="flex items-center justify-between bg-muted/20 rounded-xl px-3 py-2.5 min-h-[48px]">
+              <span className="text-xs text-muted-foreground">Pernoctas</span>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => handleChange('overnights', Math.max(0, (formData.overnights || 0) - 1))} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-lg font-bold active:scale-90 transition-transform">−</button>
+                <span className="w-6 text-center font-bold text-sm">{formData.overnights || 0}</span>
+                <button type="button" onClick={() => handleChange('overnights', (formData.overnights || 0) + 1)} className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-lg font-bold active:scale-90 transition-transform">+</button>
+              </div>
             </div>
           )}
 
