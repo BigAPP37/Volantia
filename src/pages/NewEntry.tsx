@@ -18,6 +18,9 @@ import {
   Trash2,
   Sparkles,
   Receipt,
+  ChevronDown,
+  ChevronUp,
+  Zap,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -83,6 +86,7 @@ export default function NewEntry() {
   const { addMultipleExpenses } = useWorkEntryExpenses();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!editId;
+  const [showDetails, setShowDetails] = useState(!!editId);
 
   const [formData, setFormData] = useState<Partial<WorkEntry>>(() => getDefaultFormData(initialDate));
   const [customRateQuantities, setCustomRateQuantities] = useState<Record<string, number>>({});
@@ -178,6 +182,23 @@ export default function NewEntry() {
       console.error('Error loading custom rate quantities:', error);
     }
   };
+
+  // Auto-calculate diets & extras when times change (not in edit mode)
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!formData.startTime || !formData.endTime) return;
+    const hours = calculateWorkHours(formData.startTime, formData.endTime, formData.breakMinutes || 0);
+    if (hours <= 0) return;
+    const updated = autoCalculateEntry(formData, settings);
+    // Only update calculated fields, don't overwrite user edits
+    setFormData(prev => ({
+      ...prev,
+      fullDietsNational: updated.fullDietsNational ?? prev.fullDietsNational,
+      halfDietsNational: updated.halfDietsNational ?? prev.halfDietsNational,
+      extraHours: updated.extraHours ?? prev.extraHours,
+      nightHours: updated.nightHours ?? prev.nightHours,
+    }));
+  }, [formData.startTime, formData.endTime, formData.breakMinutes]);
 
   // Calculate if it's a weekend
   const selectedDate = formData.date ? parseISO(formData.date) : new Date();
@@ -555,7 +576,26 @@ export default function NewEntry() {
           </button>
         </div>
 
-        {/* Concepts - Compact Grid */}
+        {/* Quick Save (when details hidden) */}
+        {!showDetails && !isEditMode && (
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full rounded-xl py-5 text-base font-bold bg-emerald-600 hover:bg-emerald-700">
+            <Zap className="mr-2 h-5 w-5" />
+            {isSubmitting ? 'Guardando...' : 'Guardar rápido'}
+          </Button>
+        )}
+
+        {/* Toggle Details */}
+        <button
+          type="button"
+          onClick={() => setShowDetails(!showDetails)}
+          className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {showDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {showDetails ? 'Ocultar detalles' : 'Ajustar dietas, km, pernoctas...'}
+        </button>
+
+        {/* Concepts - Compact Grid (collapsible) */}
+        {showDetails && (
         <div className="grid grid-cols-2 gap-2">
           {settings.showDiets && (
             <>
@@ -664,9 +704,10 @@ export default function NewEntry() {
             </div>
           )}
         </div>
+        )}
 
         {/* Custom Rates Section */}
-        {activeRates.length > 0 && (
+        {showDetails && activeRates.length > 0 && (
           <div className="grid grid-cols-2 gap-2">
             {activeRates.map((rate) => (
               <div key={rate.id} className="flex items-center gap-2 bg-primary/5 border border-primary/10 rounded-lg px-2 py-1.5">
@@ -685,6 +726,7 @@ export default function NewEntry() {
         )}
 
         {/* Expenses Section */}
+        {showDetails && (
         <GlassCard>
           <h3 className="mb-3 flex items-center gap-2 font-semibold text-sm">
             <Receipt className="h-4 w-4 text-destructive" />
@@ -712,8 +754,10 @@ export default function NewEntry() {
             }}
           />
         </GlassCard>
+        )}
 
         {/* Notes */}
+        {showDetails && (
         <GlassCard>
           <h3 className="mb-4 font-semibold">Notas</h3>
           <Textarea
@@ -723,12 +767,15 @@ export default function NewEntry() {
             className="min-h-[80px] rounded-xl"
           />
         </GlassCard>
+        )}
 
-        {/* Submit Button (mobile) */}
+        {/* Submit Button (full, when details visible or edit mode) */}
+        {(showDetails || isEditMode) && (
         <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full rounded-xl py-6 text-lg">
           <Save className="mr-2 h-5 w-5" />
           {isSubmitting ? 'Guardando...' : (isEditMode ? 'Actualizar Servicio' : 'Guardar Servicio')}
         </Button>
+        )}
       </div>
       </PageTransition>
     </AppLayout>
