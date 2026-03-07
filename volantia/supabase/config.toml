@@ -1,0 +1,7 @@
+project_id = "doiphtgoybtjuxflhkgs"
+
+[functions.scan-payroll]
+verify_jwt = false
+
+[functions.scan-ticket]
+verify_jwt = false
