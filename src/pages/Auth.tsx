@@ -5,7 +5,7 @@ import {
   Mail, Lock, User, Eye, EyeOff, ArrowLeft, ArrowRight,
   Calendar, FileText, Camera, BarChart3, Wallet, Settings,
   Clock, Moon, Utensils, Plus, Receipt, Fuel, ParkingCircle,
-  Percent, Sliders, TrendingUp, ChevronRight, ChevronLeft, Sparkles
+  Percent, Sliders, TrendingUp, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,125 +28,17 @@ const signupSchema = loginSchema.extend({
   path: ['confirmPassword'],
 });
 
-// ── Animated Background ──────────────────────────────────────────
-function RoadBackground() {
+// ── Background ───────────────────────────────────────────────────
+function AuthBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      {/* Dark gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950" />
-
-      {/* Road lines - horizontal flowing */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="roadLines" x="0" y="0" width="120" height="40" patternUnits="userSpaceOnUse">
-            <rect x="10" y="18" width="40" height="4" rx="2" fill="white" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#roadLines)">
-          <animateTransform
-            attributeName="transform"
-            type="translate"
-            values="0 0; -120 0"
-            dur="3s"
-            repeatCount="indefinite"
-          />
-        </rect>
-      </svg>
-
-      {/* Speed lines */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={`speed-${i}`}
-          className="absolute h-[1px] bg-gradient-to-r from-transparent via-blue-400/20 to-transparent"
-          style={{
-            top: `${10 + i * 12}%`,
-            width: `${100 + Math.random() * 200}px`,
-          }}
-          animate={{
-            x: ['-200px', '110vw'],
-            opacity: [0, 0.4, 0],
-          }}
-          transition={{
-            duration: 4 + Math.random() * 3,
-            repeat: Infinity,
-            delay: i * 0.7,
-            ease: 'linear',
-          }}
-        />
-      ))}
-
-      {/* Floating euro signs */}
-      {[...Array(5)].map((_, i) => (
-        <motion.div
-          key={`euro-${i}`}
-          className="absolute text-emerald-400/[0.06] font-bold select-none"
-          style={{
-            fontSize: `${30 + i * 15}px`,
-            left: `${10 + i * 18}%`,
-            top: `${15 + (i % 3) * 30}%`,
-          }}
-          animate={{
-            y: [0, -40, 0],
-            rotate: [0, 10, -10, 0],
-            opacity: [0.04, 0.08, 0.04],
-          }}
-          transition={{
-            duration: 6 + i,
-            repeat: Infinity,
-            delay: i * 1.2,
-            ease: 'easeInOut',
-          }}
-        >
-          €
-        </motion.div>
-      ))}
-
-      {/* KM counter dots */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={`km-${i}`}
-          className="absolute text-blue-300/[0.05] font-mono text-xs select-none"
-          style={{
-            right: `${5 + i * 10}%`,
-            bottom: `${10 + (i % 4) * 15}%`,
-          }}
-          animate={{
-            opacity: [0.03, 0.07, 0.03],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            delay: i * 0.5,
-          }}
-        >
-          {(Math.floor(Math.random() * 999) + 100).toLocaleString()} km
-        </motion.div>
-      ))}
-
-      {/* Speedometer arc - bottom right */}
-      <svg className="absolute bottom-0 right-0 w-80 h-80 opacity-[0.04]" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="80" stroke="white" strokeWidth="3" fill="none" strokeDasharray="8 12" />
-        <circle cx="100" cy="100" r="60" stroke="white" strokeWidth="2" fill="none" strokeDasharray="4 8" />
-        <motion.line
-          x1="100" y1="100" x2="100" y2="30"
-          stroke="white" strokeWidth="2" strokeLinecap="round"
-          animate={{ rotate: ['-60deg', '60deg', '-60deg'] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '100px 100px' }}
-        />
-      </svg>
-
-      {/* Subtle grid overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.02]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
-        }}
-      />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#080c18] via-[#0f1729] to-[#0d1a2d]" />
+      {/* Subtle blue glow top-right */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-500/[0.04] rounded-full blur-3xl" />
+      {/* Subtle warm glow bottom-left */}
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-amber-500/[0.03] rounded-full blur-3xl" />
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
     </div>
   );
 }
@@ -390,7 +282,7 @@ export default function Auth() {
 
   return (
     <div className="relative min-h-screen flex flex-col">
-      <RoadBackground />
+      <AuthBackground />
 
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col">
