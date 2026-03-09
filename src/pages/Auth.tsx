@@ -279,12 +279,28 @@ function FeatureCard({ slide, isActive }: { slide: typeof onboardingSlides[0]; i
 // ── Main Auth Component ──────────────────────────────────────────
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  const [phase, setPhase] = useState<'onboarding' | 'auth'>('onboarding');
+  // If user already has a session, redirect to home
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  // Check if onboarding was already seen
+  const hasSeenOnboarding = () => {
+    try { return localStorage.getItem('volantia_onboarding_seen') === 'true'; } catch { return false; }
+  };
+
+  const markOnboardingSeen = () => {
+    try { localStorage.setItem('volantia_onboarding_seen', 'true'); } catch { /* ignore */ }
+  };
+
+  const [phase, setPhase] = useState<'onboarding' | 'auth'>(hasSeenOnboarding() ? 'auth' : 'onboarding');
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(hasSeenOnboarding());
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -295,6 +311,11 @@ export default function Auth() {
     confirmPassword: '',
     displayName: '',
   });
+
+  // Mark onboarding as seen when user moves to auth phase
+  useEffect(() => {
+    if (phase === 'auth') markOnboardingSeen();
+  }, [phase]);
 
   // Auto-advance slides
   useEffect(() => {
