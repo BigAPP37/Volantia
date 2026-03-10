@@ -27,30 +27,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'Lovable AI not configured' }),
+        JSON.stringify({ error: 'Gemini API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Processing ticket image with AI...');
+    // Strip data URL prefix if present to get raw base64
+    const base64Data = imageBase64.includes(',')
+      ? imageBase64.split(',')[1]
+      : imageBase64;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `Eres un experto en análisis de tickets y recibos de gastos profesionales de conductores en España.
+    const mimeType = imageBase64.startsWith('data:image/png')
+      ? 'image/png'
+      : 'image/jpeg';
 
-Tu tarea es extraer información de una imagen de ticket/recibo y clasificarlo.
+    console.log('Processing ticket image with Gemini...');
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                text: `Eres un experto en análisis de tickets y recibos de gastos profesionales de conductores en España.
+
+Analiza esta imagen de ticket/recibo y clasifícalo.
 
 Categorías disponibles:
 - "fuel" = Gasoil, gasolina, combustible, estación de servicio (Repsol, Cepsa, BP, Shell, etc.)
@@ -60,58 +67,46 @@ Categorías disponibles:
 
 Extrae:
 - expense_type: La categoría del gasto (fuel, toll, parking, other)
-- amount: El importe total en euros (solo el número, sin símbolo €)
+- amount: El importe total en euros (solo número, sin €)
 - description: Descripción breve del establecimiento o concepto (máx 30 caracteres)
 - confidence: Tu nivel de confianza de 0 a 100
 
 IMPORTANTE:
-- Si ves palabras como "gasoil", "diesel", "gasolina", "combustible", estación de servicio -> es "fuel"
-- Si ves "peaje", "autopista", "via-T" -> es "toll"  
-- Si ves "parking", "aparcamiento", "estacionamiento" -> es "parking"
+- Si ves "gasoil", "diesel", "gasolina", "combustible", estación de servicio -> "fuel"
+- Si ves "peaje", "autopista", "via-T" -> "toll"
+- Si ves "parking", "aparcamiento", "estacionamiento" -> "parking"
 - El importe suele estar etiquetado como "TOTAL", "IMPORTE", "A PAGAR"
 
-Responde ÚNICAMENTE con un JSON válido. Ejemplo:
-{"expense_type": "fuel", "amount": 85.50, "description": "Repsol A-7 km 340", "confidence": 95}`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Analiza este ticket y extrae el tipo de gasto, importe y descripción. Responde solo con JSON.'
+Responde ÚNICAMENTE con un JSON válido. Sin explicaciones, sin markdown, sin backticks.
+Ejemplo: {"expense_type":"fuel","amount":85.50,"description":"Repsol A-7 km 340","confidence":95}`
               },
               {
-                type: 'image_url',
-                image_url: {
-                  url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
                 }
               }
             ]
-          }
-        ],
-        max_tokens: 300,
-        temperature: 0.1,
-      }),
-    });
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 300,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', errorText);
-      
+      console.error('Gemini API error:', response.status, errorText);
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Créditos de IA agotados.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
+
       return new Response(
         JSON.stringify({ error: 'Error processing image with AI' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -119,9 +114,9 @@ Responde ÚNICAMENTE con un JSON válido. Ejemplo:
     }
 
     const aiResponse = await response.json();
-    const content = aiResponse.choices?.[0]?.message?.content || '';
+    const content = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    console.log('AI Response:', content);
+    console.log('Gemini Response:', content);
 
     let ticketData: TicketData = {
       expense_type: 'other',
@@ -134,8 +129,8 @@ Responde ÚNICAMENTE con un JSON válido. Ejemplo:
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         ticketData = {
-          expense_type: ['fuel', 'toll', 'parking', 'other'].includes(parsed.expense_type) 
-            ? parsed.expense_type 
+          expense_type: ['fuel', 'toll', 'parking', 'other'].includes(parsed.expense_type)
+            ? parsed.expense_type
             : 'other',
           amount: typeof parsed.amount === 'number' ? parsed.amount : parseFloat(parsed.amount) || 0,
           description: parsed.description?.substring(0, 50) || undefined,
@@ -150,10 +145,7 @@ Responde ÚNICAMENTE con un JSON válido. Ejemplo:
     console.log('Extracted ticket data:', ticketData);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        data: ticketData,
-      }),
+      JSON.stringify({ success: true, data: ticketData }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

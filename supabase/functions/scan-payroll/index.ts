@@ -15,7 +15,6 @@ interface PayrollData {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,64 +29,65 @@ Deno.serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'Lovable AI not configured' }),
+        JSON.stringify({ error: 'Gemini API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Call Lovable AI Gateway with vision capabilities
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `Eres un experto en análisis de nóminas españolas. Tu tarea es extraer datos de una imagen de nómina.
+    // Strip data URL prefix if present to get raw base64
+    const base64Data = imageBase64.includes(',') 
+      ? imageBase64.split(',')[1] 
+      : imageBase64;
+
+    // Detect mime type
+    const mimeType = imageBase64.startsWith('data:image/png') 
+      ? 'image/png' 
+      : 'image/jpeg';
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                text: `Eres un experto en análisis de nóminas españolas. Analiza esta imagen de nómina y extrae los datos.
 
 Extrae los siguientes campos si están presentes:
-- Nombre de la empresa (companyName)
-- CIF de la empresa (companyCIF) 
-- Salario base mensual (baseSalary) - solo el número
-- Porcentaje de IRPF (irpf) - solo el número sin el símbolo %
-- Porcentaje de Seguridad Social del trabajador (socialSecurity) - solo el número
-- Salario neto (netSalary) - solo el número
+- companyName: Nombre de la empresa
+- companyCIF: CIF de la empresa
+- baseSalary: Salario base mensual (solo número)
+- irpf: Porcentaje de IRPF (solo número sin %)
+- socialSecurity: Porcentaje de Seguridad Social del trabajador (solo número)
+- netSalary: Salario neto (solo número)
 
-Responde ÚNICAMENTE con un JSON válido con estos campos. Si no puedes leer algún campo, omítelo del JSON.
-Ejemplo de respuesta:
-{"companyName": "Transportes ABC S.L.", "companyCIF": "B12345678", "baseSalary": 1500, "irpf": 12, "socialSecurity": 4.7, "netSalary": 1250}`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Analiza esta nómina española y extrae los datos solicitados. Responde solo con el JSON.'
+Responde ÚNICAMENTE con un JSON válido. Sin explicaciones, sin markdown, sin backticks.
+Ejemplo: {"companyName":"Transportes ABC S.L.","companyCIF":"B12345678","baseSalary":1500,"irpf":12,"socialSecurity":4.7,"netSalary":1250}`
               },
               {
-                type: 'image_url',
-                image_url: {
-                  url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`
+                inlineData: {
+                  mimeType,
+                  data: base64Data,
                 }
               }
             ]
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.1,
-      }),
-    });
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 500,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', errorText);
+      console.error('Gemini API error:', response.status, errorText);
       return new Response(
         JSON.stringify({ error: 'Error processing image with AI' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -95,12 +95,10 @@ Ejemplo de respuesta:
     }
 
     const aiResponse = await response.json();
-    const content = aiResponse.choices?.[0]?.message?.content || '';
+    const content = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    // Parse the JSON from AI response
     let payrollData: PayrollData = {};
     try {
-      // Extract JSON from the response (in case there's extra text)
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         payrollData = JSON.parse(jsonMatch[0]);
@@ -111,11 +109,7 @@ Ejemplo de respuesta:
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        data: payrollData,
-        rawResponse: content 
-      }),
+      JSON.stringify({ success: true, data: payrollData, rawResponse: content }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

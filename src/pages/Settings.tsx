@@ -63,6 +63,19 @@ export default function Settings() {
     setLocalSettings((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Allow empty string while typing, convert to number on blur
+  const numChange = (field: keyof UserSettings) => ({
+    value: (localSettings[field] as any) ?? '',
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      handleChange(field, v === '' ? '' : v);
+    },
+    onBlur: (e: React.FocusEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      handleChange(field, v === '' ? 0 : parseFloat(v) || 0);
+    },
+  });
+
   const handlePayrollDataExtracted = (data: Partial<UserSettings>) => {
     setLocalSettings((prev) => ({ ...prev, ...data }));
   };
@@ -119,8 +132,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="10"
-                value={localSettings.baseSalary}
-                onChange={(e) => handleChange('baseSalary', parseFloat(e.target.value) || 0)}
+                {...numChange('baseSalary')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -131,8 +143,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="10"
-                value={localSettings.fixedBonuses}
-                onChange={(e) => handleChange('fixedBonuses', parseFloat(e.target.value) || 0)}
+                {...numChange('fixedBonuses')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -154,8 +165,7 @@ export default function Settings() {
                 min="0"
                 max="100"
                 step="0.1"
-                value={localSettings.irpf}
-                onChange={(e) => handleChange('irpf', parseFloat(e.target.value) || 0)}
+                {...numChange('irpf')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -167,8 +177,7 @@ export default function Settings() {
                 min="0"
                 max="100"
                 step="0.1"
-                value={localSettings.socialSecurity}
-                onChange={(e) => handleChange('socialSecurity', parseFloat(e.target.value) || 0)}
+                {...numChange('socialSecurity')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -180,8 +189,7 @@ export default function Settings() {
                 min="0"
                 max="100"
                 step="0.01"
-                value={localSettings.mei}
-                onChange={(e) => handleChange('mei', parseFloat(e.target.value) || 0)}
+                {...numChange('mei')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -193,8 +201,7 @@ export default function Settings() {
                 min="0"
                 max="100"
                 step="0.1"
-                value={localSettings.unemployment}
-                onChange={(e) => handleChange('unemployment', parseFloat(e.target.value) || 0)}
+                {...numChange('unemployment')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -211,8 +218,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.fullDietNational}
-                onChange={(e) => handleChange('fullDietNational', parseFloat(e.target.value) || 0)}
+                {...numChange('fullDietNational')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -222,8 +228,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.halfDietNational}
-                onChange={(e) => handleChange('halfDietNational', parseFloat(e.target.value) || 0)}
+                {...numChange('halfDietNational')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -233,8 +238,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.overnightNational}
-                onChange={(e) => handleChange('overnightNational', parseFloat(e.target.value) || 0)}
+                {...numChange('overnightNational')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -251,8 +255,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.fullDietInternational}
-                onChange={(e) => handleChange('fullDietInternational', parseFloat(e.target.value) || 0)}
+                {...numChange('fullDietInternational')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -262,8 +265,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.halfDietInternational}
-                onChange={(e) => handleChange('halfDietInternational', parseFloat(e.target.value) || 0)}
+                {...numChange('halfDietInternational')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -273,8 +275,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.overnightInternational}
-                onChange={(e) => handleChange('overnightInternational', parseFloat(e.target.value) || 0)}
+                {...numChange('overnightInternational')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -291,8 +292,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.extraHourRate}
-                onChange={(e) => handleChange('extraHourRate', parseFloat(e.target.value) || 0)}
+                {...numChange('extraHourRate')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -302,8 +302,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.nightHourRate}
-                onChange={(e) => handleChange('nightHourRate', parseFloat(e.target.value) || 0)}
+                {...numChange('nightHourRate')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -313,8 +312,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.5"
-                value={localSettings.halfNightHourRate}
-                onChange={(e) => handleChange('halfNightHourRate', parseFloat(e.target.value) || 0)}
+                {...numChange('halfNightHourRate')}
                 className="mt-1 rounded-xl"
               />
             </div>
@@ -324,8 +322,7 @@ export default function Settings() {
                 type="number"
                 min="0"
                 step="0.01"
-                value={localSettings.kilometerRate}
-                onChange={(e) => handleChange('kilometerRate', parseFloat(e.target.value) || 0)}
+                {...numChange('kilometerRate')}
                 className="mt-1 rounded-xl"
               />
             </div>
