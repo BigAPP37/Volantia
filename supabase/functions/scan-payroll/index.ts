@@ -5,15 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface PayrollData {
-  companyName?: string;
-  companyCIF?: string;
-  baseSalary?: number;
-  irpf?: number;
-  socialSecurity?: number;
-  netSalary?: number;
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -29,65 +20,66 @@ Deno.serve(async (req) => {
       );
     }
 
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'Gemini API key not configured' }),
+        JSON.stringify({ error: 'Anthropic API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Strip data URL prefix if present to get raw base64
-    const base64Data = imageBase64.includes(',') 
-      ? imageBase64.split(',')[1] 
+    const base64Data = imageBase64.includes(',')
+      ? imageBase64.split(',')[1]
       : imageBase64;
 
-    // Detect mime type
-    const mimeType = imageBase64.startsWith('data:image/png') 
-      ? 'image/png' 
+    const mediaType = imageBase64.startsWith('data:image/png')
+      ? 'image/png'
       : 'image/jpeg';
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                text: `Eres un experto en análisis de nóminas españolas. Analiza esta imagen de nómina y extrae los datos.
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: base64Data,
+              },
+            },
+            {
+              type: 'text',
+              text: `Analiza esta nómina española y extrae los datos. Responde SOLO con JSON válido, sin explicaciones ni backticks.
 
-Extrae los siguientes campos si están presentes:
+Campos a extraer:
 - companyName: Nombre de la empresa
 - companyCIF: CIF de la empresa
 - baseSalary: Salario base mensual (solo número)
-- irpf: Porcentaje de IRPF (solo número sin %)
+- irpf: Porcentaje de IRPF (solo número)
 - socialSecurity: Porcentaje de Seguridad Social del trabajador (solo número)
 - netSalary: Salario neto (solo número)
 
-Responde ÚNICAMENTE con un JSON válido. Sin explicaciones, sin markdown, sin backticks.
-Ejemplo: {"companyName":"Transportes ABC S.L.","companyCIF":"B12345678","baseSalary":1500,"irpf":12,"socialSecurity":4.7,"netSalary":1250}`
-              },
-              {
-                inlineData: {
-                  mimeType,
-                  data: base64Data,
-                }
-              }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 500,
-          },
-        }),
-      }
-    );
+Si no puedes leer algún campo, omítelo. Ejemplo:
+{"companyName":"Transportes ABC S.L.","baseSalary":1500,"irpf":12,"socialSecurity":4.7,"netSalary":1250}`,
+            },
+          ],
+        }],
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('Anthropic API error:', response.status, errorText);
       return new Response(
         JSON.stringify({ error: 'Error processing image with AI' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -95,9 +87,9 @@ Ejemplo: {"companyName":"Transportes ABC S.L.","companyCIF":"B12345678","baseSal
     }
 
     const aiResponse = await response.json();
-    const content = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const content = aiResponse.content?.[0]?.text || '';
 
-    let payrollData: PayrollData = {};
+    let payrollData = {};
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -113,9 +105,9 @@ Ejemplo: {"companyName":"Transportes ABC S.L.","companyCIF":"B12345678","baseSal
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: unknown) {
+  } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error in scan-payroll function:', error);
+    console.error('Error in scan-payroll:', error);
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

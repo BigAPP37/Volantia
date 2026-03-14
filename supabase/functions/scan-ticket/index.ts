@@ -5,13 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface TicketData {
-  expense_type: 'fuel' | 'toll' | 'parking' | 'other';
-  amount: number;
-  description?: string;
-  confidence: number;
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -27,82 +20,76 @@ Deno.serve(async (req) => {
       );
     }
 
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'Gemini API key not configured' }),
+        JSON.stringify({ error: 'Anthropic API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Strip data URL prefix if present to get raw base64
     const base64Data = imageBase64.includes(',')
       ? imageBase64.split(',')[1]
       : imageBase64;
 
-    const mimeType = imageBase64.startsWith('data:image/png')
+    const mediaType = imageBase64.startsWith('data:image/png')
       ? 'image/png'
       : 'image/jpeg';
 
-    console.log('Processing ticket image with Gemini...');
+    console.log('Processing ticket image with Claude...');
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                text: `Eres un experto en análisis de tickets y recibos de gastos profesionales de conductores en España.
-
-Analiza esta imagen de ticket/recibo y clasifícalo.
-
-Categorías disponibles:
-- "fuel" = Gasoil, gasolina, combustible, estación de servicio (Repsol, Cepsa, BP, Shell, etc.)
-- "toll" = Peaje, autopista, via-T, telepeaje
-- "parking" = Parking, aparcamiento, estacionamiento
-- "other" = Otros gastos (comida, material, etc.)
-
-Extrae:
-- expense_type: La categoría del gasto (fuel, toll, parking, other)
-- amount: El importe total en euros (solo número, sin €)
-- description: Descripción breve del establecimiento o concepto (máx 30 caracteres)
-- confidence: Tu nivel de confianza de 0 a 100
-
-IMPORTANTE:
-- Si ves "gasoil", "diesel", "gasolina", "combustible", estación de servicio -> "fuel"
-- Si ves "peaje", "autopista", "via-T" -> "toll"
-- Si ves "parking", "aparcamiento", "estacionamiento" -> "parking"
-- El importe suele estar etiquetado como "TOTAL", "IMPORTE", "A PAGAR"
-
-Responde ÚNICAMENTE con un JSON válido. Sin explicaciones, sin markdown, sin backticks.
-Ejemplo: {"expense_type":"fuel","amount":85.50,"description":"Repsol A-7 km 340","confidence":95}`
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: base64Data,
               },
-              {
-                inlineData: {
-                  mimeType,
-                  data: base64Data,
-                }
-              }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 300,
-          },
-        }),
-      }
-    );
+            },
+            {
+              type: 'text',
+              text: `Analiza este ticket/recibo de un conductor profesional en España. Responde SOLO con JSON válido, sin explicaciones ni backticks.
+
+Categorías:
+- "fuel" = Gasoil, gasolina, combustible, estación de servicio
+- "toll" = Peaje, autopista, via-T, telepeaje
+- "parking" = Parking, aparcamiento
+- "other" = Otros gastos
+
+Campos a extraer:
+- expense_type: categoría (fuel, toll, parking, other)
+- amount: importe total en euros (solo número)
+- description: descripción breve del establecimiento (máx 30 caracteres)
+- confidence: nivel de confianza 0-100
+
+Ejemplo:
+{"expense_type":"fuel","amount":85.50,"description":"Repsol A-7 km 340","confidence":95}`,
+            },
+          ],
+        }],
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('Anthropic API error:', response.status, errorText);
 
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.' }),
+          JSON.stringify({ error: 'Demasiadas solicitudes. Inténtalo en unos segundos.' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -114,11 +101,11 @@ Ejemplo: {"expense_type":"fuel","amount":85.50,"description":"Repsol A-7 km 340"
     }
 
     const aiResponse = await response.json();
-    const content = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const content = aiResponse.content?.[0]?.text || '';
 
-    console.log('Gemini Response:', content);
+    console.log('Claude Response:', content);
 
-    let ticketData: TicketData = {
+    let ticketData = {
       expense_type: 'other',
       amount: 0,
       confidence: 0,
@@ -142,16 +129,14 @@ Ejemplo: {"expense_type":"fuel","amount":85.50,"description":"Repsol A-7 km 340"
       console.error('Raw content:', content);
     }
 
-    console.log('Extracted ticket data:', ticketData);
-
     return new Response(
       JSON.stringify({ success: true, data: ticketData }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: unknown) {
+  } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error in scan-ticket function:', error);
+    console.error('Error in scan-ticket:', error);
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
