@@ -61,8 +61,8 @@ export default function ExportPDF() {
   const [dateTo, setDateTo] = useState<Date | undefined>(new Date());
 
   const [concepts, setConcepts] = useState<ConceptOption[]>([
-    { id: 'startTime', label: 'Hora inicio', icon: Clock, enabled: false },
-    { id: 'endTime', label: 'Hora fin', icon: Clock, enabled: false },
+    { id: 'startTime', label: 'Hora inicio', icon: Clock, enabled: true },
+    { id: 'endTime', label: 'Hora fin', icon: Clock, enabled: true },
     { id: 'workHours', label: 'Horas trabajadas', icon: Clock, enabled: true },
     { id: 'fullDiets', label: 'Dietas completas', icon: Utensils, enabled: true },
     { id: 'halfDiets', label: 'Medias dietas', icon: Utensils, enabled: true },
