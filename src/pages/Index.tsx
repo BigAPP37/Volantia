@@ -58,6 +58,15 @@ const Index = () => {
     return map;
   }, [entries, settings]);
 
+  // Service type by date (for calendar colors)
+  const serviceTypeByDate = useMemo(() => {
+    const map = new Map<string, string>();
+    entries.forEach(entry => {
+      map.set(entry.date, entry.serviceType);
+    });
+    return map;
+  }, [entries]);
+
   const handleDayClick = (day: Date) => {
     if (!isSameMonth(day, currentMonth)) return;
     const dateStr = format(day, 'yyyy-MM-dd');
@@ -185,6 +194,22 @@ const Index = () => {
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const dayValue = entriesByDate.get(dateStr) || 0;
                 const hasEntry = entries.some(e => e.date === dateStr);
+                const sType = serviceTypeByDate.get(dateStr);
+
+                // Color by service type
+                const entryBg = hasEntry && inMonth ? (
+                  sType === 'extra' ? 'bg-amber-500/15' :
+                  sType === 'rest' ? 'bg-emerald-500/15' :
+                  sType === 'sick' ? 'bg-red-500/15' :
+                  'bg-primary/10'
+                ) : '';
+
+                const valueColor = (
+                  sType === 'extra' ? 'text-amber-600' :
+                  sType === 'rest' ? 'text-emerald-600' :
+                  sType === 'sick' ? 'text-red-500' :
+                  'text-primary'
+                );
 
                 return (
                   <button
@@ -196,23 +221,24 @@ const Index = () => {
                       !inMonth && 'opacity-20',
                       inMonth && 'active:scale-90',
                       isToday && 'ring-2 ring-primary ring-offset-1 ring-offset-background',
-                      hasEntry && inMonth && 'bg-primary/10',
+                      entryBg,
                     )}
                   >
                     <span className={cn(
                       'text-xs font-medium',
                       isToday && 'text-primary font-bold',
-                      isWeekend(day) && !isToday && 'text-muted-foreground',
+                      isWeekend(day) && !isToday && !hasEntry && 'text-muted-foreground',
+                      hasEntry && inMonth && valueColor,
                     )}>
                       {format(day, 'd')}
                     </span>
                     {hasEntry && inMonth && dayValue > 0 && (
-                      <span className="text-[9px] font-semibold text-primary mt-0.5">
+                      <span className={cn('text-[9px] font-semibold mt-0.5', valueColor)}>
                         {dayValue.toFixed(0)}€
                       </span>
                     )}
                     {hasEntry && inMonth && dayValue === 0 && (
-                      <span className="text-[9px] font-medium text-muted-foreground mt-0.5">
+                      <span className={cn('text-[9px] font-medium mt-0.5', valueColor)}>
                         0€
                       </span>
                     )}
@@ -223,9 +249,27 @@ const Index = () => {
                 );
               })}
             </div>
-          </div>
 
-          {/* ═══ TODAY QUICK ACTION ═══ */}
+            {/* Legend */}
+            <div className="flex justify-center gap-4 mt-3 pt-2 border-t border-border/20">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-primary/20" />
+                <span className="text-[10px] text-muted-foreground">Regular</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-amber-500/20" />
+                <span className="text-[10px] text-muted-foreground">Extra</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/20" />
+                <span className="text-[10px] text-muted-foreground">Descanso</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-red-500/20" />
+                <span className="text-[10px] text-muted-foreground">Baja</span>
+              </div>
+            </div>
+          </div>
           <button
             onClick={() => {
               const todayStr = format(today, 'yyyy-MM-dd');
