@@ -13,11 +13,18 @@ export function GlassCard({ children, className, onClick, animate = true, style 
   return (
     <div
       onClick={onClick}
-      style={style}
+      style={{
+        background: 'rgba(13,22,45,0.72)',
+        backdropFilter: 'blur(16px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(16px) saturate(1.4)',
+        border: '1px solid rgba(59,130,246,0.1)',
+        borderRadius: 18,
+        ...style,
+      }}
       className={cn(
-        'glass-card rounded-2xl p-4',
+        'p-4',
         animate && 'animate-fade-in',
-        onClick && 'cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]',
+        onClick && 'cursor-pointer transition-transform active:scale-[0.98]',
         className
       )}
     >
