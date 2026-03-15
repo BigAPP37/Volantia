@@ -1,13 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Plus, BarChart3, Settings } from 'lucide-react';
+import { Home, Plus, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
-  { path: '/stats', icon: BarChart3, label: 'Stats' },
   { path: '/new-entry', icon: Plus, label: 'Fichar', isMain: true },
-  { path: '/settings', icon: Settings, label: 'Ajustes' },
+  { path: '/stats', icon: BarChart3, label: 'Stats' },
 ];
 
 export function BottomNavigation() {
@@ -40,9 +39,9 @@ export function BottomNavigation() {
               return (
                 <Link key={item.path} to={mainTo} className="relative flex flex-col items-center" style={{ marginTop: -20 }}>
                   <div
-                    className="flex h-13 w-13 items-center justify-center rounded-full text-white transition-transform active:scale-90"
+                    className="flex items-center justify-center rounded-full text-white transition-transform active:scale-90"
                     style={{
-                      width: 52, height: 52,
+                      width: 56, height: 56,
                       background: 'linear-gradient(145deg, #3b82f6, #2563eb)',
                       boxShadow: '0 0 0 6px rgba(59,130,246,0.08), 0 4px 24px rgba(59,130,246,0.45)',
                     }}
@@ -59,7 +58,7 @@ export function BottomNavigation() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 px-4 py-2 transition-colors min-w-[60px]',
+                  'flex flex-col items-center gap-0.5 px-6 py-2 transition-colors min-w-[72px]',
                   isActive ? 'text-blue-400' : 'text-slate-600'
                 )}
               >
