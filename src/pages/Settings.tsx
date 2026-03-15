@@ -100,7 +100,7 @@ export default function Settings() {
   };
 
   return (
-    <AppLayout showNavigation={false} title="Ajustes">
+    <AppLayout showNavigation={false} showHeader={false}>
       <PageTransition>
       <div className="space-y-4 pb-6">
         {/* Header */}

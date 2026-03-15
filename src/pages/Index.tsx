@@ -184,7 +184,7 @@ const Index = () => {
                 const isToday = isSameDay(day, today);
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const dayValue = entriesByDate.get(dateStr) || 0;
-                const hasEntry = dayValue > 0;
+                const hasEntry = entries.some(e => e.date === dateStr);
 
                 return (
                   <button
@@ -206,9 +206,14 @@ const Index = () => {
                     )}>
                       {format(day, 'd')}
                     </span>
-                    {hasEntry && inMonth && (
+                    {hasEntry && inMonth && dayValue > 0 && (
                       <span className="text-[9px] font-semibold text-primary mt-0.5">
                         {dayValue.toFixed(0)}€
+                      </span>
+                    )}
+                    {hasEntry && inMonth && dayValue === 0 && (
+                      <span className="text-[9px] font-medium text-muted-foreground mt-0.5">
+                        0€
                       </span>
                     )}
                     {!hasEntry && inMonth && (

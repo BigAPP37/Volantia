@@ -386,7 +386,7 @@ export default function NewEntry() {
   };
 
   return (
-    <AppLayout showNavigation={false} title={isEditMode ? "Editar Servicio" : "Nuevo Servicio"}>
+    <AppLayout showNavigation={false} showHeader={false}>
       <PageTransition>
       <div className="space-y-4 pb-6">
         {/* Header */}

@@ -108,7 +108,7 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <AppLayout showNavigation={false} title="Perfil">
+      <AppLayout showNavigation={false} showHeader={false}>
         <div className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
@@ -117,7 +117,7 @@ export default function Profile() {
   }
 
   return (
-    <AppLayout showNavigation={false} title="Perfil">
+    <AppLayout showNavigation={false} showHeader={false}>
       <PageTransition>
       <div className="space-y-4 pb-6">
         {/* Header */}
