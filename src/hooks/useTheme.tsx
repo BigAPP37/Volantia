@@ -12,7 +12,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem('volantia-theme');
-    return (stored as Theme) || 'system';
+    return (stored as Theme) || 'dark'; // Volantia is always dark by default
   });
   
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');

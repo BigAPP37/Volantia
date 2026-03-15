@@ -151,19 +151,19 @@ const Index = () => {
           {/* ═══ QUICK STATS ═══ */}
           <div className="grid grid-cols-4 gap-2">
             <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
-              <p className="text-xl font-bold">{summary.totalWorkDays}</p>
+              <p className="text-xl font-bold text-white">{summary.totalWorkDays}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Días</p>
             </div>
             <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
-              <p className="text-xl font-bold">{Math.round(summary.totalHours)}h</p>
+              <p className="text-xl font-bold text-white">{Math.round(summary.totalHours)}h</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Horas</p>
             </div>
             <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
-              <p className="text-xl font-bold">{summary.totalFullDietsNational + summary.totalFullDietsInternational + summary.totalHalfDietsNational + summary.totalHalfDietsInternational}</p>
+              <p className="text-xl font-bold text-white">{summary.totalFullDietsNational + summary.totalFullDietsInternational + summary.totalHalfDietsNational + summary.totalHalfDietsInternational}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Dietas</p>
             </div>
             <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
-              <p className="text-xl font-bold">{summary.totalKilometers}</p>
+              <p className="text-xl font-bold text-white">{summary.totalKilometers}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Km</p>
             </div>
           </div>
