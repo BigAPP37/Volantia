@@ -116,7 +116,20 @@ export function NotificationsPanel({
               <div style={{ margin: '10px 12px 0', borderRadius: 12, padding: 12, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
                 <p style={{ fontSize: 12, color: '#cbd5e1', marginBottom: 8, lineHeight: 1.5 }}>Activa las notificaciones para recibir alertas aunque la app esté cerrada.</p>
                 <button
-                  onClick={onRequestPermission}
+                  onClick={async () => {
+                    // Must be called DIRECTLY from user gesture — no async wrapper
+                    if (typeof Notification !== 'undefined') {
+                      const result = await Notification.requestPermission();
+                      try { localStorage.setItem('volantia_notif_permission_asked', 'true'); } catch { /* ignore */ }
+                      if (result === 'granted') {
+                        new Notification('✅ Notificaciones activadas', {
+                          body: 'Recibirás alertas de Volantia aunque la app esté cerrada.',
+                          icon: '/pwa-192x192.png',
+                        });
+                      }
+                      onRequestPermission(); // trigger re-render in parent
+                    }
+                  }}
                   style={{ fontSize: 12, fontWeight: 600, color: '#60a5fa', background: 'rgba(59,130,246,0.1)', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer' }}
                 >
                   Activar notificaciones

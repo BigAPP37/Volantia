@@ -1,6 +1,6 @@
 import { Bell, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkEntries } from '@/hooks/useWorkEntries';
 import { useUserSettings } from '@/hooks/useUserSettings';
@@ -57,6 +57,18 @@ export function Header({ title = 'Volantia', showProfile = true }: HeaderProps) 
     setNotifOpen(v => !v);
     if (!notifOpen) markAllRead();
   };
+
+  // Refresh permission state when panel closes
+  const [permissionState, setPermissionState] = useState(() =>
+    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
+  );
+
+  const handlePermissionRefresh = useCallback(() => {
+    if (typeof Notification !== 'undefined') {
+      setPermissionState(Notification.permission);
+    }
+    setUnreadCount(getUnreadCount());
+  }, [getUnreadCount]);
 
   return (
     <>
@@ -117,8 +129,8 @@ export function Header({ title = 'Volantia', showProfile = true }: HeaderProps) 
         onMarkRead={markRead}
         onMarkAllRead={markAllRead}
         onClearAll={clearAll}
-        onRequestPermission={requestPermission}
-        permission={getPermission()}
+        onRequestPermission={handlePermissionRefresh}
+        permission={permissionState}
       />
     </>
   );
