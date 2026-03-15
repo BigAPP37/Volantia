@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { SplashScreen } from "@/components/SplashScreen";
 import { AnimatedRoutes } from "@/components/layout/AnimatedRoutes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { UpdatePrompt } from "@/components/UpdatePrompt";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ const App = () => {
             {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
             <Toaster />
             <Sonner />
+            <UpdatePrompt />
             <BrowserRouter>
               <AnimatedRoutes />
             </BrowserRouter>
