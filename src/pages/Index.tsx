@@ -150,26 +150,26 @@ const Index = () => {
 
           {/* ═══ QUICK STATS ═══ */}
           <div className="grid grid-cols-4 gap-2">
-            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+            <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
               <p className="text-xl font-bold">{summary.totalWorkDays}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Días</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Días</p>
             </div>
-            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+            <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
               <p className="text-xl font-bold">{Math.round(summary.totalHours)}h</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Horas</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Horas</p>
             </div>
-            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+            <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
               <p className="text-xl font-bold">{summary.totalFullDietsNational + summary.totalFullDietsInternational + summary.totalHalfDietsNational + summary.totalHalfDietsInternational}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Dietas</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Dietas</p>
             </div>
-            <div className="bg-card/50 rounded-xl p-3 text-center border border-border/30">
+            <div className="rounded-xl p-3 text-center border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.7)' }}>
               <p className="text-xl font-bold">{summary.totalKilometers}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Km</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Km</p>
             </div>
           </div>
 
           {/* ═══ COMPACT CALENDAR ═══ */}
-          <div className="bg-card/40 rounded-2xl p-4 border border-border/30">
+          <div className="rounded-2xl p-4 border border-white/[0.06]" style={{ background: 'rgba(13,22,45,0.72)' }}>
             {/* Month nav */}
             <div className="flex items-center justify-between mb-3">
               <button onClick={() => setCurrentMonth(prev => subMonths(prev, 1))} className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors">
@@ -212,10 +212,10 @@ const Index = () => {
                 ) : '';
 
                 const valueColor = (
-                  sType === 'extra' ? 'text-amber-600' :
-                  sType === 'rest' ? 'text-emerald-600' :
-                  sType === 'sick' ? 'text-red-500' :
-                  'text-primary'
+                  sType === 'extra' ? 'text-amber-400' :
+                  sType === 'rest' ? 'text-emerald-400' :
+                  sType === 'sick' ? 'text-red-400' :
+                  'text-blue-400'
                 );
 
                 return (
@@ -258,22 +258,22 @@ const Index = () => {
             </div>
 
             {/* Legend */}
-            <div className="flex justify-center gap-4 mt-3 pt-2 border-t border-border/20">
+            <div className="flex justify-center gap-4 mt-3 pt-2 border-t border-white/[0.05]">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-primary/20" />
-                <span className="text-[10px] text-muted-foreground">Regular</span>
+                <span className="w-2.5 h-2.5 rounded-sm bg-blue-500/30" />
+                <span className="text-[10px] text-slate-500">Regular</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-amber-500/20" />
-                <span className="text-[10px] text-muted-foreground">Extra</span>
+                <span className="w-2.5 h-2.5 rounded-sm bg-amber-500/30" />
+                <span className="text-[10px] text-slate-500">Extra</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/20" />
-                <span className="text-[10px] text-muted-foreground">Descanso</span>
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/30" />
+                <span className="text-[10px] text-slate-500">Descanso</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-red-500/20" />
-                <span className="text-[10px] text-muted-foreground">Baja</span>
+                <span className="w-2.5 h-2.5 rounded-sm bg-red-500/30" />
+                <span className="text-[10px] text-slate-500">Baja</span>
               </div>
             </div>
           </div>
@@ -287,23 +287,24 @@ const Index = () => {
                 navigate(`/new-entry?date=${todayStr}`);
               }
             }}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 transition-all active:scale-[0.98] hover:bg-primary/10"
+            className="w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]"
+            style={{ background: 'rgba(59,130,246,0.06)', borderColor: 'rgba(59,130,246,0.12)' }}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-              <Plus className="h-6 w-6 text-primary" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'rgba(59,130,246,0.12)' }}>
+              <Plus className="h-6 w-6 text-blue-400" />
             </div>
             <div className="text-left flex-1">
-              <p className="font-semibold text-sm">
+              <p className="font-semibold text-sm text-white">
                 {entries.some(e => e.date === format(today, 'yyyy-MM-dd'))
                   ? 'Editar jornada de hoy'
                   : 'Registrar jornada de hoy'
                 }
               </p>
-              <p className="text-xs text-muted-foreground capitalize">
+              <p className="text-xs text-slate-500 capitalize">
                 {format(today, "EEEE d 'de' MMMM", { locale: es })}
               </p>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            <ChevronRight className="h-5 w-5 text-slate-600" />
           </button>
 
         </div>
