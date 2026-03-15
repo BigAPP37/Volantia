@@ -722,12 +722,13 @@ export default function Auth() {
                   </Button>
                 </Link>
 
-                <div className="mt-4 text-center">
-                  <Link
-                    to="/privacy"
-                    className="text-xs text-white/20 hover:text-white/40 transition-colors underline"
-                  >
-                    Política de Privacidad
+                <div className="mt-4 text-center flex items-center justify-center gap-3">
+                  <Link to="/privacy" className="text-xs text-white/20 hover:text-white/40 transition-colors underline">
+                    Privacidad
+                  </Link>
+                  <span className="text-white/10 text-xs">·</span>
+                  <Link to="/terms" className="text-xs text-white/20 hover:text-white/40 transition-colors underline">
+                    Términos
                   </Link>
                 </div>
               </div>

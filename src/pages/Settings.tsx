@@ -440,17 +440,26 @@ export default function Settings() {
 
         {/* Legal Info */}
         <GlassCard>
-          <h3 className="mb-4 flex items-center gap-2 font-semibold">
-            <Shield className="h-5 w-5 text-primary" />
-            Legal
+          <h3 className="mb-4 flex items-center gap-2 font-semibold text-white">
+            <Shield className="h-5 w-5 text-blue-400" />
+            Legal y Privacidad
           </h3>
-          <Button 
-            variant="outline" 
-            className="w-full rounded-xl" 
-            onClick={() => navigate('/privacy')}
-          >
-            Política de Privacidad
-          </Button>
+          <div className="space-y-2">
+            <Button variant="outline" className="w-full rounded-xl justify-start text-slate-300" onClick={() => navigate('/privacy')}>
+              <Shield className="mr-2 h-4 w-4 text-blue-400" />
+              Política de Privacidad
+            </Button>
+            <Button variant="outline" className="w-full rounded-xl justify-start text-slate-300" onClick={() => navigate('/terms')}>
+              <Shield className="mr-2 h-4 w-4 text-blue-400" />
+              Términos de Servicio
+            </Button>
+          </div>
+          <p className="mt-4 text-center text-xs text-slate-600">
+            Volantia v1.0 · © {new Date().getFullYear()} Volantia
+          </p>
+          <p className="text-center text-xs text-slate-600 mt-1">
+            Contacto: <span className="text-blue-400">legal@volantia.app</span>
+          </p>
         </GlassCard>
 
         {/* Save Button */}

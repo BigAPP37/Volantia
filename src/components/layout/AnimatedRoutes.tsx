@@ -13,6 +13,7 @@ const Auth = lazy(() => import('@/pages/Auth'));
 const ExportPDF = lazy(() => import('@/pages/ExportPDF'));
 const Install = lazy(() => import('@/pages/Install'));
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function LazyFallback() {
@@ -40,6 +41,7 @@ export function AnimatedRoutes() {
         <Route path="/export" element={<ExportPDF />} />
         <Route path="/install" element={<Install />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
