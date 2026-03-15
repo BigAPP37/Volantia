@@ -60,13 +60,13 @@ export default function Settings() {
     }
   }, [settings, isLoading, isInitialized]);
 
-  const handleChange = (field: keyof UserSettings, value: any) => {
+  const handleChange = (field: keyof UserSettings, value: string | number | boolean) => {
     setLocalSettings((prev) => ({ ...prev, [field]: value }));
   };
 
   // Allow empty string while typing, convert to number on blur
   const numChange = (field: keyof UserSettings) => ({
-    value: (localSettings[field] as any) ?? '',
+    value: (localSettings[field] as number | string) ?? '',
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
       handleChange(field, v === '' ? '' : v);

@@ -79,7 +79,7 @@ const Index = () => {
     const dateStr = format(day, 'yyyy-MM-dd');
     const dayEntries = entries.filter(e => e.date === dateStr);
     
-    try { localStorage.setItem('volantia-selected-date', dateStr); } catch {}
+    try { localStorage.setItem('volantia-selected-date', dateStr); } catch { /* localStorage not available */ }
 
     if (dayEntries.length > 0) {
       navigate(`/new-entry?id=${dayEntries[0].id}&date=${dateStr}`);

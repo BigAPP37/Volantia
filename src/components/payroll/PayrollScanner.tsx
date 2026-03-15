@@ -108,9 +108,9 @@ export function PayrollScanner({ open, onOpenChange, onDataExtracted }: PayrollS
         throw new Error('No se encontraron datos en la imagen');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error processing payroll:', error);
-      setErrorMessage(error.message || 'Error desconocido');
+      setErrorMessage(error instanceof Error ? error.message : 'Error desconocido');
       setStatus('error');
     }
   };

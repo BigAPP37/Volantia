@@ -446,7 +446,7 @@ export default function ExportPDF() {
     });
 
     // Get final Y position after main table
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
     // Summary section - Categories breakdown
     doc.setFontSize(14);

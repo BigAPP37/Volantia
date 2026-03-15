@@ -76,7 +76,9 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-ui': ['framer-motion', 'recharts', 'date-fns'],
+            'vendor-motion': ['framer-motion'],
+            'vendor-charts': ['recharts'],
+            'vendor-dates': ['date-fns'],
             'vendor-supabase': ['@supabase/supabase-js'],
             'vendor-pdf': ['jspdf', 'jspdf-autotable'],
           },

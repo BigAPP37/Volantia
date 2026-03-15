@@ -46,7 +46,9 @@ import { RouteTemplate } from '@/types/routeTemplate';
 const serviceTypes: { value: ServiceType; label: string; icon: React.ElementType }[] = [
   { value: 'regular', label: 'Regular', icon: Clock },
   { value: 'extra', label: 'Extra', icon: Sun },
-  { value: 'rest', label: 'Descanso', icon: Moon },
+  { value: 'rest', label: 'Festivo', icon: Moon },
+  { value: 'vacation', label: 'Vacaciones', icon: Moon },
+  { value: 'sick', label: 'Baja', icon: Moon },
 ];
 
 const getCurrentTime = () => format(new Date(), 'HH:mm');
@@ -233,7 +235,7 @@ export default function NewEntry() {
   };
   const estimatedValue = Object.values(breakdown).reduce((a, b) => a + b, 0);
 
-  const handleChange = (field: keyof WorkEntry, value: any) => {
+  const handleChange = (field: keyof WorkEntry, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

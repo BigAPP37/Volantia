@@ -1,5 +1,5 @@
 // Work Entry Types
-export type ServiceType = 'regular' | 'extra' | 'rest' | 'sick';
+export type ServiceType = 'regular' | 'extra' | 'rest' | 'sick' | 'vacation';
 export type ServiceScope = 'national' | 'international';
 
 export interface WorkEntry {
