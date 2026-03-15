@@ -332,11 +332,42 @@ export default function ExportPDF() {
     // Day of week abbreviations
     const dayAbbr = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+    // Special day label helper
+    const getSpecialDayLabel = (serviceType: string): string | null => {
+      switch (serviceType) {
+        case 'rest':      return 'FESTIVO';
+        case 'sick':      return 'BAJA';
+        case 'vacation':  return 'VACACIONES';
+        default:          return null;
+      }
+    };
+
+    // Track which row indices are 'extra' or special for coloring
+    const extraRowIndices = new Set<number>();
+    const specialRowIndices = new Set<number>();
+
     // Build table data
-    const tableData = filteredEntries.map((entry) => {
+    const tableData = filteredEntries.map((entry, rowIndex) => {
       const entryDate = parseISO(entry.date);
       const dayName = dayAbbr[entryDate.getDay()];
       const row: (string | number)[] = [`${dayName} ${format(entryDate, 'dd/MM')}`];
+
+      const specialLabel = getSpecialDayLabel(entry.serviceType);
+
+      if (specialLabel) {
+        // Special day: fill all columns with the label (merged visually)
+        specialRowIndices.add(rowIndex);
+        const colCount = headers.length - 1; // all except Fecha
+        for (let i = 0; i < colCount; i++) {
+          row.push(i === 0 ? specialLabel : '');
+        }
+        return row;
+      }
+
+      if (entry.serviceType === 'extra') {
+        extraRowIndices.add(rowIndex);
+      }
+
       const hours = calculateWorkHours(entry.startTime, entry.endTime, entry.breakMinutes);
       const dayValue = calculateFilteredDayValue(entry, enabledIds);
       const customRatesValue = getEntryTotalCustomRatesValue(entry.id);
@@ -359,7 +390,6 @@ export default function ExportPDF() {
       if (enabledConcepts.find((c) => c.id === 'extraHours')) row.push(entry.extraHours ? `${entry.extraHours}` : '-');
       if (enabledConcepts.find((c) => c.id === 'kilometers')) row.push(entry.kilometers || '-');
       if (enabledConcepts.find((c) => c.id === 'tips')) row.push(entry.tips ? formatCurrency(entry.tips) : '-');
-      // Add custom rate quantities
       enabledCustomRates.forEach((cr) => {
         const qty = getEntryCustomRateQuantity(entry.id, cr.id);
         row.push(qty > 0 ? qty : '-');
@@ -393,6 +423,25 @@ export default function ExportPDF() {
       },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 22 },
+      },
+      didParseCell: (data) => {
+        if (data.section !== 'body') return;
+        const rowIdx = data.row.index;
+
+        // Special days: grey background + italic text
+        if (specialRowIndices.has(rowIdx)) {
+          data.cell.styles.fillColor = [220, 220, 220];
+          data.cell.styles.textColor = [100, 100, 100];
+          data.cell.styles.fontStyle = 'italic';
+          data.cell.styles.halign = data.column.index === 1 ? 'left' : 'center';
+        }
+
+        // Extra days: orange background + bold
+        if (extraRowIndices.has(rowIdx)) {
+          data.cell.styles.fillColor = [255, 237, 213]; // orange-100
+          data.cell.styles.textColor = [154, 52, 18];   // orange-800
+          data.cell.styles.fontStyle = 'bold';
+        }
       },
     });
 
