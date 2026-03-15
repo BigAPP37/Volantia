@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWorkEntries } from '@/hooks/useWorkEntries';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useWorkEntryCustomRates } from '@/hooks/useWorkEntryCustomRates';
 import { calculateMonthlySummary, calculateDayValue, formatCurrency } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,10 @@ const Index = () => {
   const { entries, isLoading: entriesLoading } = useWorkEntries();
   const { settings } = useUserSettings();
   const { showOnboarding, completeOnboarding } = useOnboarding();
+
+  // Custom rates per entry (Día extra, Dieta finde, ½ Noctu, etc.)
+  const entryIds = useMemo(() => entries.map(e => e.id), [entries]);
+  const { getEntryCustomRatesValue } = useWorkEntryCustomRates(entryIds);
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const monthStr = format(currentMonth, 'yyyy-MM');
@@ -47,16 +52,18 @@ const Index = () => {
     return eachDayOfInterval({ start, end });
   }, [currentMonth]);
 
-  // Entries by date
+  // Entries by date — includes standard rates + custom rates (Día extra, Dieta finde, ½ Noctu…)
   const entriesByDate = useMemo(() => {
     const map = new Map<string, number>();
     entries.forEach(entry => {
       const key = entry.date;
       const prev = map.get(key) || 0;
-      map.set(key, prev + calculateDayValue(entry, settings));
+      const standardValue = calculateDayValue(entry, settings);
+      const customValue = getEntryCustomRatesValue(entry.id);
+      map.set(key, prev + standardValue + customValue);
     });
     return map;
-  }, [entries, settings]);
+  }, [entries, settings, getEntryCustomRatesValue]);
 
   // Service type by date (for calendar colors)
   const serviceTypeByDate = useMemo(() => {
