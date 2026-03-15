@@ -14,6 +14,7 @@ import {
   Monitor,
   HelpCircle,
   Shield,
+  BookOpen,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -421,21 +422,26 @@ export default function Settings() {
         <GlassCard>
           <h3 className="mb-4 flex items-center gap-2 font-semibold">
             <HelpCircle className="h-5 w-5 text-primary" />
-            Ayuda
+            Ayuda y Recursos
           </h3>
-          <Button 
-            variant="outline" 
-            className="w-full rounded-xl" 
-            onClick={() => {
-              resetOnboarding();
-              navigate('/');
-            }}
-          >
-            Ver tutorial de bienvenida
-          </Button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Revisa las funcionalidades principales de la app
-          </p>
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              className="w-full rounded-xl justify-start text-slate-300"
+              onClick={() => navigate('/guide')}
+            >
+              <BookOpen className="mr-2 h-4 w-4 text-blue-400" />
+              Guía del Tacógrafo
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full rounded-xl justify-start text-slate-300"
+              onClick={() => { resetOnboarding(); navigate('/'); }}
+            >
+              <HelpCircle className="mr-2 h-4 w-4 text-slate-400" />
+              Ver tutorial de bienvenida
+            </Button>
+          </div>
         </GlassCard>
 
         {/* Legal Info */}

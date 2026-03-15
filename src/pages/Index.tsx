@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isWeekend, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { LogIn, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Plus, Clock, Utensils } from 'lucide-react';
+import { LogIn, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Plus, Clock, Utensils, BookOpen } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -303,6 +303,22 @@ const Index = () => {
               <p className="text-xs text-slate-500 capitalize">
                 {format(today, "EEEE d 'de' MMMM", { locale: es })}
               </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-slate-600" />
+          </button>
+
+          {/* Guide quick access */}
+          <button
+            onClick={() => navigate('/guide')}
+            className="w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]"
+            style={{ background: 'rgba(139,92,246,0.05)', borderColor: 'rgba(139,92,246,0.12)' }}
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl flex-shrink-0" style={{ background: 'rgba(139,92,246,0.12)' }}>
+              <BookOpen className="h-6 w-6 text-purple-400" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-sm text-white">Guía del Tacógrafo</p>
+              <p className="text-xs text-slate-500">Tiempos, pausas, multas y más</p>
             </div>
             <ChevronRight className="h-5 w-5 text-slate-600" />
           </button>
