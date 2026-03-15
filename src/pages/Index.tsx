@@ -123,20 +123,20 @@ const Index = () => {
 
           {/* ═══ HERO: The only number that matters ═══ */}
           <div className="pt-2 pb-1">
-            <p className="text-sm text-muted-foreground font-medium">
+            <p className="text-sm text-slate-500 font-medium">
               {format(currentMonth, 'MMMM yyyy', { locale: es })}
             </p>
             <div className="flex items-end gap-3 mt-1">
-              <span className="text-5xl font-extrabold tracking-tight tabular-nums">
+              <span className="text-5xl font-extrabold tracking-tight text-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                 {summary.netEstimate.toFixed(0)}
-                <span className="text-2xl font-semibold text-muted-foreground ml-0.5">€</span>
+                <span className="text-2xl font-semibold text-slate-500 ml-0.5">€</span>
               </span>
               {prevSummary.netEstimate > 0 && (
                 <span className={cn(
                   'text-xs font-semibold px-2 py-0.5 rounded-full mb-2 flex items-center gap-0.5',
-                  netDiff > 10 ? 'bg-emerald-500/10 text-emerald-500' :
-                  netDiff < -10 ? 'bg-red-500/10 text-red-500' :
-                  'bg-muted text-muted-foreground'
+                  netDiff > 10 ? 'bg-emerald-500/10 text-emerald-400' :
+                  netDiff < -10 ? 'bg-red-500/10 text-red-400' :
+                  'bg-white/5 text-slate-500'
                 )}>
                   {netDiff > 10 && <TrendingUp className="h-3 w-3" />}
                   {netDiff < -10 && <TrendingDown className="h-3 w-3" />}
@@ -145,7 +145,7 @@ const Index = () => {
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Neto estimado</p>
+            <p className="text-xs text-slate-600 mt-1">Neto estimado</p>
           </div>
 
           {/* ═══ QUICK STATS ═══ */}

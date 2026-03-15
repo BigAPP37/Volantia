@@ -18,7 +18,7 @@ export function AppLayout({
   return (
     <div
       className="min-h-screen relative overflow-x-hidden"
-      style={{ background: '#070f1e', maxWidth: 430, margin: '0 auto' }}
+      style={{ background: '#070f1e' }}
     >
       {/* Ambient top glow */}
       <div
