@@ -105,7 +105,7 @@ export function useUserSettings() {
     const newSettings = { ...settings, ...updates };
     
     if (user) {
-      const dbUpdates: Record<string, any> = {};
+      const dbUpdates: Record<string, string | number | boolean | null> = {};
       if (updates.baseSalary !== undefined) dbUpdates.base_salary = updates.baseSalary;
       if (updates.fixedBonuses !== undefined) dbUpdates.fixed_bonuses = updates.fixedBonuses;
       if (updates.irpf !== undefined) dbUpdates.irpf = updates.irpf;

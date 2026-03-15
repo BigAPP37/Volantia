@@ -136,7 +136,7 @@ export function useWorkEntries() {
 
   const updateEntry = useCallback(async (id: string, updates: Partial<WorkEntry>) => {
     if (user) {
-      const dbUpdates: Record<string, any> = {};
+      const dbUpdates: Record<string, string | number | boolean | null> = {};
       if (updates.date !== undefined) dbUpdates.date = updates.date;
       if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime;
       if (updates.endTime !== undefined) dbUpdates.end_time = updates.endTime;
