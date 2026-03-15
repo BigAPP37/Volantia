@@ -541,30 +541,28 @@ export default function NewEntry() {
           </div>
         </GlassCard>
 
-        {/* Service Type & Scope - Responsive layout */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            {serviceTypes.map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => handleChange('serviceType', value)}
-                className={cn(
-                  'flex-1 px-2 py-2.5 rounded-xl text-xs font-medium transition-all touch-manipulation active:scale-95 min-h-[44px]',
-                  formData.serviceType === value
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        {/* Service Type & Scope - Single row scroll */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {serviceTypes.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => handleChange('serviceType', value)}
+              className={cn(
+                'flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-medium transition-all touch-manipulation active:scale-95 min-h-[44px] whitespace-nowrap',
+                formData.serviceType === value
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
+              )}
+            >
+              {label}
+            </button>
+          ))}
           <button
             type="button"
             onClick={() => handleChange('scope', formData.scope === 'national' ? 'international' : 'national')}
             className={cn(
-              'px-4 py-2.5 rounded-xl text-xs font-medium transition-all touch-manipulation active:scale-95 min-h-[44px]',
+              'flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-medium transition-all touch-manipulation active:scale-95 min-h-[44px] whitespace-nowrap',
               formData.scope === 'international'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
