@@ -28,17 +28,168 @@ const signupSchema = loginSchema.extend({
   path: ['confirmPassword'],
 });
 
-// ── Background ───────────────────────────────────────────────────
+// ── Night Road Background ─────────────────────────────────────────
 function AuthBackground() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#080c18] via-[#0f1729] to-[#0d1a2d]" />
-      {/* Subtle blue glow top-right */}
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-500/[0.04] rounded-full blur-3xl" />
-      {/* Subtle warm glow bottom-left */}
-      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-amber-500/[0.03] rounded-full blur-3xl" />
-      {/* Vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+      <style>{`
+        @keyframes roadMove {
+          0%   { transform: perspective(400px) rotateX(18deg) translateY(0); }
+          100% { transform: perspective(400px) rotateX(18deg) translateY(80px); }
+        }
+        @keyframes dashMove {
+          0%   { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: -120; }
+        }
+        @keyframes starTwinkle {
+          0%, 100% { opacity: 0.6; }
+          50%       { opacity: 1; }
+        }
+        @keyframes headlightPulse {
+          0%, 100% { opacity: 0.55; }
+          50%       { opacity: 0.75; }
+        }
+        @keyframes fogDrift {
+          0%   { transform: translateX(-8%) scaleX(1); opacity: 0.18; }
+          50%  { transform: translateX(4%)  scaleX(1.05); opacity: 0.26; }
+          100% { transform: translateX(-8%) scaleX(1); opacity: 0.18; }
+        }
+      `}</style>
+
+      {/* Sky gradient — deep night */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#01040e] via-[#060d1f] to-[#0d1625]" />
+
+      {/* Stars */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 430 500" preserveAspectRatio="xMidYMid slice">
+        {[
+          [40,30],[80,18],[130,45],[175,12],[220,38],[270,20],[320,52],[380,15],[410,40],
+          [60,70],[100,85],[160,62],[200,90],[255,68],[300,88],[350,72],[420,95],
+          [25,110],[90,120],[145,105],[195,130],[240,112],[295,125],[360,108],[400,135],
+          [55,155],[110,165],[170,148],[215,172],[265,158],[315,175],[370,150],
+        ].map(([x, y], i) => (
+          <circle
+            key={i} cx={x} cy={y} r={i % 5 === 0 ? 1.2 : 0.7}
+            fill="white"
+            style={{ animation: `starTwinkle ${2 + (i % 4) * 0.7}s ease-in-out infinite`, animationDelay: `${(i * 0.3) % 3}s` }}
+          />
+        ))}
+        {/* Moon */}
+        <circle cx="370" cy="55" r="18" fill="#e8eaf2" opacity="0.12" />
+        <circle cx="376" cy="50" r="16" fill="#070f20" />
+        <circle cx="370" cy="55" r="18" fill="none" stroke="#c8cadc" strokeWidth="0.5" opacity="0.3" />
+      </svg>
+
+      {/* Horizon glow — city lights far away */}
+      <div className="absolute w-full" style={{ top: '38%', height: 60 }}>
+        <div style={{
+          width: '100%', height: '100%',
+          background: 'radial-gradient(ellipse 80% 40% at 50% 100%, rgba(59,100,200,0.18) 0%, transparent 100%)',
+        }} />
+      </div>
+
+      {/* Road surface */}
+      <div className="absolute bottom-0 left-0 right-0" style={{ top: '42%' }}>
+        <svg width="100%" height="100%" viewBox="0 0 430 340" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#0e1520" />
+              <stop offset="60%" stopColor="#111a28" />
+              <stop offset="100%" stopColor="#0a1018" />
+            </linearGradient>
+            <linearGradient id="roadEdgeL" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#1a2540" stopOpacity="0" />
+              <stop offset="100%" stopColor="#1a2540" stopOpacity="0.5" />
+            </linearGradient>
+            <linearGradient id="roadEdgeR" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#1a2540" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#1a2540" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* Road body */}
+          <polygon points="120,0 310,0 430,340 0,340" fill="url(#roadGrad)" />
+          {/* Road edges shadow */}
+          <polygon points="0,0 130,0 0,340" fill="url(#roadEdgeL)" opacity="0.6" />
+          <polygon points="300,0 430,0 430,340" fill="url(#roadEdgeR)" opacity="0.6" />
+        </svg>
+
+        {/* Animated lane dashes */}
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox="0 0 430 340"
+          preserveAspectRatio="none"
+          style={{ animation: 'roadMove 0.6s linear infinite' }}
+        >
+          {/* Center line dashes */}
+          <line x1="215" y1="-20" x2="215" y2="360"
+            stroke="rgba(255,220,80,0.55)" strokeWidth="2.5"
+            strokeDasharray="55 65"
+            style={{ animation: 'dashMove 0.6s linear infinite' }}
+          />
+          {/* Left lane */}
+          <line x1="162" y1="-20" x2="80" y2="360"
+            stroke="rgba(255,255,255,0.12)" strokeWidth="1.5"
+            strokeDasharray="40 80"
+            style={{ animation: 'dashMove 0.6s linear infinite', animationDelay: '-0.2s' }}
+          />
+          {/* Right lane */}
+          <line x1="268" y1="-20" x2="350" y2="360"
+            stroke="rgba(255,255,255,0.12)" strokeWidth="1.5"
+            strokeDasharray="40 80"
+            style={{ animation: 'dashMove 0.6s linear infinite', animationDelay: '-0.2s' }}
+          />
+          {/* White edge lines */}
+          <line x1="120" y1="0" x2="0" y2="340"
+            stroke="rgba(255,255,255,0.2)" strokeWidth="2"
+          />
+          <line x1="310" y1="0" x2="430" y2="340"
+            stroke="rgba(255,255,255,0.2)" strokeWidth="2"
+          />
+        </svg>
+      </div>
+
+      {/* Headlight cones from bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-full pointer-events-none">
+        <svg width="100%" height="100%" viewBox="0 0 430 700" preserveAspectRatio="none">
+          <defs>
+            <radialGradient id="headlightL" cx="35%" cy="100%" r="55%" fx="38%" fy="98%">
+              <stop offset="0%" stopColor="rgba(220,235,255,0.22)" />
+              <stop offset="70%" stopColor="rgba(180,210,255,0.06)" />
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
+            <radialGradient id="headlightR" cx="65%" cy="100%" r="55%" fx="62%" fy="98%">
+              <stop offset="0%" stopColor="rgba(220,235,255,0.22)" />
+              <stop offset="70%" stopColor="rgba(180,210,255,0.06)" />
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
+          </defs>
+          <polygon points="100,700 215,290 0,700" fill="url(#headlightL)"
+            style={{ animation: 'headlightPulse 3s ease-in-out infinite' }} />
+          <polygon points="330,700 215,290 430,700" fill="url(#headlightR)"
+            style={{ animation: 'headlightPulse 3s ease-in-out infinite', animationDelay: '0.3s' }} />
+        </svg>
+      </div>
+
+      {/* Fog layer over road */}
+      <div className="absolute bottom-0 w-full" style={{ top: '55%' }}>
+        <div style={{
+          width: '130%', marginLeft: '-15%', height: '100%',
+          background: 'radial-gradient(ellipse 70% 30% at 50% 20%, rgba(80,110,180,0.15) 0%, transparent 70%)',
+          animation: 'fogDrift 8s ease-in-out infinite',
+        }} />
+      </div>
+
+      {/* Dark vignette overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'radial-gradient(ellipse 100% 100% at 50% 50%, transparent 30%, rgba(0,0,0,0.55) 100%)',
+      }} />
+
+      {/* Top fade for readability */}
+      <div className="absolute top-0 left-0 right-0 h-48"
+        style={{ background: 'linear-gradient(to bottom, rgba(1,4,14,0.7) 0%, transparent 100%)' }} />
+
+      {/* Bottom fade so form floats above road */}
+      <div className="absolute bottom-0 left-0 right-0 h-64"
+        style={{ background: 'linear-gradient(to top, rgba(4,8,20,0.85) 0%, transparent 100%)' }} />
     </div>
   );
 }
